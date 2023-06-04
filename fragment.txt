@@ -1,6 +1,6 @@
 #version 330 core
 
-struct PointLight {
+struct SunLight {
     vec3 position;
     vec3 color;
     float strength;
@@ -12,7 +12,7 @@ in vec3 fragmentNormal;
 in vec3 fragmentColor; // Added color input
 
 uniform sampler2D imageTexture;
-uniform PointLight Light;
+uniform SunLight Light;
 uniform vec3 cameraPosition;
 
 uniform vec3 materialDiffuse;
@@ -21,18 +21,18 @@ uniform vec3 materialAmbient;
 
 out vec4 color;
 
-vec3 calculatePointLight(PointLight light, vec3 fragPosition, vec3 fragNormal);
+vec3 calculateLight(SunLight Light, vec3 fragPosition, vec3 fragNormal);
 
 void main()
 {
-    vec3 temp = vec3(0);
+    vec3 temp = 0.5 * texture(imageTexture, fragmentTexCoord).rgb;
 
-    temp += calculatePointLight(Light, fragmentPosition, fragmentNormal); // Pass the fragmentColor
+    temp += calculateLight(Light, fragmentPosition, fragmentNormal);
 
     color = vec4(temp, fragmentColor);
 }
 
-vec3 calculatePointLight(PointLight light, vec3 fragPosition, vec3 fragNormal) {
+vec3 calculateLight(SunLight light, vec3 fragPosition, vec3 fragNormal ) {
 
     vec3 baseTexture = texture(imageTexture, fragmentTexCoord).rgb;
     vec3 result = vec3(0);
@@ -49,6 +49,7 @@ vec3 calculatePointLight(PointLight light, vec3 fragPosition, vec3 fragNormal) {
 
         // Use the texture color as the base colour
         result += 0.75 * baseTexture;
+        //result += mix(baseTexture, fragmentColor, 0.`); // Interpolate between baseTexture and fragmentColor
         result += light.color * light.strength * max(0.0, dot(fragNormal, fragLight)) / (distance * distance) * baseTexture;
          result += light.color * light.strength * pow(max(0.0, dot(fragNormal, halfVec)),32) / (distance * distance) ;
     } else {
